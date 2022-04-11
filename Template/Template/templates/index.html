@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{title}} {{page_type}}
+{% endblock title %}
+
+{% block content %}
+
+{% csrf_token %}
+
+  <h1 class="h3 mb-3 font-weight-normal"> {{title}} {{page_type}}</h1>
+
+
+<div class="d-flex flex-column">
+    <a class="m-auto" href="{% url 'users:register' %}">Register</a>
+    <a class="m-auto" href="{% url 'users:login' %}">Login</a>
+</div>
+
+<a class="m-auto" href="{% url 'users:index' %}">Users</a>
+<a class="m-auto" href="{% url 'incidents:index' %}">Incidents</a>
+{% endblock content %}
+
+

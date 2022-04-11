@@ -1,0 +1,21 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Login  jh</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Login">
+</form>
+
+<a href="{% url 'dashboard' %}">Back to dashboard</a>
+<a href="{% url 'password_reset_form' %}">Reset password</a>
+<a href="{% url 'password_change_form' %}">Change password</a>
+<a href="{% url 'register_user' %}">Register</a>
+<a href="{% url 'social:begin' 'github' %}">Login with GitHub</a>
+
+
+
+{% endblock %}

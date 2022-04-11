@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load extras %}
+
+{% block title %}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>My Title</title>
+        <style type="text/css">
+            @page {
+                /* size: {{ pagesize }}; */
+                size: 'A4';
+                margin: 1cm;
+                /* @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 0cm;
+                    margin-left: 9cm;
+                    margin-right: 9cm;
+                    height: 1cm;
+                } */
+            }
+        </style>
+    </head>
+
+    {{title}} {{page_type}}
+{% endblock title %}
+{% block css %}
+
+
+{% endblock css %}
+{% block content %}
+ 
+    <h1 class="h3 mb-3 font-weight-normal">{{instance_type}} {{action}} {{page_type}}</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'info' in message.tags %}
+                <div class="card-panel green lighten-2">{{message}}</div>
+            {% endif %}
+        {% endfor%}
+    {% endif %}
+ 
+    {% csrf_token %}
+
+
+{% if instances %}
+ <table>
+    <thead>
+        <tr>
+            <th>No</th>
+            {% with fields=instances|get_field_names_from_instances %}
+
+                {% for field_name in fields %}
+                    {% if field_name != 'description' %}
+                        
+                        <th> {{ field_name | field_name_to_phrase }}   </th>
+
+                    {% endif %} 
+    
+        
+                {% endfor %} 
+            {% endwith %} 
+        </tr>
+    </thead>
+
+    <tbody> 
+        {% for instance in instances %}  
+        <div>              
+            <tr>
+                <td>{{ forloop.counter}}</td>
+                {% for field_name, header_value in instance.items %}
+                   <td>{{ header_value}}</td>
+                {% endfor%}
+            </tr> 
+        </div> 
+        {% endfor%}         
+    </tbody>  
+    
+    
+
+{% if instance %}    
+<table>
+    <thead>
+        <tr>
+            <td>Field Name  </td> 
+            <td>Value </td>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+            <div>     
+                {% for field_name, value in instance|get_all_field_value_pairs %}
+                    {% if field_name != 'attachment_data' %}
+                        {% if value %}
+                        <tr>
+                            <td> {{ field_name | field_name_to_phrase }}   </td>
+                            <td> {{value}} </td>
+                        </tr> 
+                        {% endif %} 
+                    {% endif %} 
+                {% empty %}
+                    <h1>Not Available</h1>
+                {% endfor%}
+                
+            </div>
+    
+    </tbody>    
+</table>  
+
+  
+
+
+
+{% endif %} 
+
+
+</table>
+
+    {% for instance in instances %} 
+        <h1>Incident: {{ forloop.counter}}</h1>
+        {% if instance.detail_info_set %}
+            <h2><b>{{instance.code}}</b></h2>
+            <h3><b>Alert Name:</b> {{instance.alert.name}}</h3>
+            
+            {% for detail in instance.detail_info_set.all %}
+                <h3><b>Source:</b> {{detail.attachment_source.name}}</h3>
+                <h4>Engine Count: {{detail.count}}</h4>
+                <h4>Percentage: {{detail.percentage}}</h4>
+                
+                <img src="{{detail.attachment_data|get_binary}}" alt="Attachment here">
+                <!-- <img src="{{detail.attachment.path}}" alt="Attachment here"> -->
+            {% endfor %}
+        {% endif %}
+    {% endfor %} 
+
+{% endif %}
+    
+        <div>
+            {% for item in mylist %}
+                RENDER MY CONTENT
+            {% endfor %}
+        </div>
+        <div id="footerContent">
+            {%block page_foot%}
+                Page <pdf:pagenumber>
+            {%endblock%}
+        </div>
+{% endblock content %}
+

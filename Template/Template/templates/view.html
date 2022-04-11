@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load extras %}
+
+{% block title %}
+    {{title}} {{page_type}}
+{% endblock title %}
+
+{% block content %}
+ 
+    <h1 class="h3 mb-3 font-weight-normal">{{instance_type}} {{action}} {{page_type}}</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'info' in message.tags %}
+                <div class="card-panel green lighten-2">{{message}}</div>
+            {% endif %}
+        {% endfor%}
+    {% endif %}
+ 
+    {% csrf_token %}
+
+    {% if instance %}    
+        <table>
+            <thead>
+                <tr>
+                    <td>Field Name  </td> 
+                    <td>Value </td>
+                </tr>
+            </thead>
+
+            <tbody>
+                
+                    <div>     
+                        {% for field_name, value in instance|get_all_field_value_pairs %}
+                            {% if field_name != 'attachment_data' %}
+                                {% if value %}
+                                <tr>
+                                    <td> {{ field_name | field_name_to_phrase }}   </td>
+                                    <td> {{value}} </td>
+                                </tr> 
+                                {% endif %} 
+                            {% endif %} 
+                        {% empty %}
+                            <h1>Not Available</h1>
+                        {% endfor%}
+                        
+                    </div>
+            
+            </tbody>    
+        </table>  
+    
+    <div>
+        {% with add_url=app|add:':add-'|add:url_suffix  update_url=app|add:':update-'|add:url_suffix delete_url=app|add:':delete-'|add:url_suffix %}
+
+            {% if instance_type == 'Incident' %}    
+            
+                {% if instance.initialanalysis_set %}
+
+                    <button type="button" class="collapsible">Show Initial Analysis</button>
+                    <div class="content">
+                    
+                        <h1><b>{{instance.code}}</b></h1>
+                        <h2><b>Alert Name:</b> {{instance.alert.name}}</h2>
+
+                        {% for initial_analysis in instance.initialanalysis_set.all %}
+                        
+                            <h3><b>Source:</b> {{initial_analysis.attachment_source.name}}</h3>
+                            
+                            {% if initial_analysis.count %}
+                                <h4>Engine Count : {{initial_analysis.count}}</h4>
+                            {% endif %}
+                            {% if initial_analysis.percentage %}
+                                <h4>Percentage : {{initial_analysis.percentage}}</h4>
+                            {% endif %}
+                    
+                            <img src="{{initial_analysis.attachment_data|bin_2_img}}" alt="Attachment here">
+                            <!-- <img src="{{initial_analysis.attachment.url}}" alt="Attachment here"> -->  
+                            <br />  <br />          
+                            <div>           
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:view-initial-analysis' initial_analysis.id %}">View Initial Analysis</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:update-initial-analysis' initial_analysis.id %}">Update Initial Analysis</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:delete-initial-analysis' initial_analysis.id %}">Delete Initial Analysis</a>
+                                
+                                {% if initial_analysis.status == 'pending' %}
+                                    {% with approve_url=app|add:':approve-'|add:url_suffix reject_url=app|add:':reject-'|add:url_suffix %}
+                                        <a class="waves-effect waves light btn-large" href="{% url approve_url initial_analysis.id %}">Approve {{instance_type}}</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url reject_url initial_analysis.id %}">Reject {{instance_type}}</a>
+                                    {% endwith %}
+                                {% endif %}  
+                            
+                            </div> 
+                            <br />
+                            <br />
+                        {% endfor %}
+                    
+    
+                        <div>
+                            <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
+                            <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'full' %}">Download Full Report</a>  
+                        </div>
+                    <br>
+                    </div>
+                    <br>
+                    <div>
+                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
+                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'partial' %}">Download Partial Report </a>   
+                    </div>
+                    <br>
+                {% endif %}
+
+                <!-- <form action="" method="POST">    
+                    {% csrf_token %}  
+                    <div>
+                        <button class="waves-effect waves light btn-large" type="submit" value="preview-partial" name="submit">Preview Partial Report</button> 
+                        <button class="waves-effect waves light btn-large" type="submit" value="download-partial" name="submit">Download Partial Report</button>  
+                    
+                        <button class="waves-effect waves light btn-large" type="submit" value="preview-full" name="submit">Preview Full Report</button> 
+                        <button class="waves-effect waves light btn-large" type="submit" value="download-full" name="submit">Download Full Report</button>  
+                    </div>
+                </form> -->
+                <br>
+                <div>
+                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'partial' %}">Download Partial Report </a>   
+                
+                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'full' %}">Download Full Report</a>  
+                </div>
+                <br>
+
+                
+                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:add-initial-analysis' instance.id %}">Add Initial Analysis</a> 
+                
+            {% elif instance_type == 'Organization' %}  
+            
+
+                {% if instance.asset_set %}
+
+                    <button type="button" class="collapsible">Show Assets</button>
+                    <div class="content">
+                    
+                        <h1><b>{{instance}}</b></h1>
+
+                        {% for asset in instance.asset_set.all %}
+                        
+                            <h3><b>Name:</b> {{asset.name}}</h3>
+                            <h4><b>Serial Number:</b> {{asset.serial_no}}</h4>
+                            <h4><b>Manufacturer:</b> {{asset.name}}</h4>
+                            <h4><b>Description:</b> {{asset.description}}</h4>
+                            
+                            {% if asset.type %}
+                                <h4><b>Asset Type: </b>{{asset.type}}</h4>
+                            {% endif %}
+                    
+                            <br />  <br />          
+                            <div>           
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:view-asset' asset.id %}">View Asset</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:update-asset' asset.id %}">Update Asset</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:delete-asset' asset.id %}">Delete Asset</a>
+                                
+                                {% if asset.status == 'pending' %}
+                                    {% with approve_url=app|add:':approve-'|add:url_suffix reject_url=app|add:':reject-'|add:url_suffix %}
+                                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:approve-asset' asset.id %}">Approve Asset</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:reject-asset' asset.id %}">Reject Asset</a>
+                                    {% endwith %}
+                                {% endif %}  
+                            
+                            </div> 
+                            <br />
+                            <br />
+                        {% endfor %}                  
+
+                    </div>
+                    <br>
+                {% endif %}
+
+                <a class="waves-effect waves light btn-large" href="{% url 'incidents:add-asset' instance.id %}">Add Asset</a>   
+                
+            {% endif %}
+
+            
+            {% if instance.status == 'pending' %}
+                {% with approve_url=app|add:':approve-'|add:url_suffix reject_url=app|add:':reject-'|add:url_suffix %}
+                    <a class="waves-effect waves light btn-large" href="{% url approve_url instance.id %}">Approve {{instance_type}}</a>
+                    <a class="waves-effect waves light btn-large" href="{% url reject_url instance.id %}">Reject {{instance_type}}</a>
+                {% endwith %}
+            {% endif %}  
+            
+
+            {% if instance_type == 'Initial Analysis' or instance_type == 'Asset' %}
+                <a class="waves-effect waves light btn-large" href="{% url add_url instance.id %}">Add {{instance_type}}</a>         
+            {% else %}
+                <a class="waves-effect waves light btn-large" href="{% url add_url %}">Add {{instance_type}}</a>
+            {% endif %}
+
+            <a class="waves-effect waves light btn-large" href="{% url update_url instance.id %}">Update {{instance_type}}</a>
+            <a class="waves-effect waves light btn-large" href="{% url delete_url instance.id %}">Delete {{instance_type}}</a>
+     
+        {% endwith %}
+    
+    {% else %}  
+       <h2>Sorry, the Item has not been Found</h2>
+    {% endif %} 
+    </div>
+    <br>
+    <div>
+    {% if instance_type != 'Initial Analysis' %}
+        {% with view_all_url=app|add:':'|add:view_all_url %}
+            <a class="waves-effect waves light btn-large" href="{% url view_all_url %}" >View All {{title}}</a>  
+        {% endwith %}
+    {% endif %}      
+    </div>
+        
+{% endblock content %}
+
+{% block javascript %}
+    <style>
+
+    /* Style the button that is used to open and close the collapsible content */
+
+         .content {
+            /* display: none; */
+            background-color: #f1f1f1;
+            overflow: hidden;
+            padding: 0 18px;
+            max-height: 0;
+            transition: max-height 0.2s ease-out;
+        }
+        .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            }
+
+        .collapsible:after {
+            content: '\02795';
+            font-size: 13px;
+            color: blue;
+            float: right;
+            margin-left: 5px;
+        }
+
+        .collapsible:hover {
+            background-color: #ccc;
+            }
+        .active {
+            background-color: #ccc;
+            }
+
+        .active:after {
+            content: "\2796";
+        }
+   </style>
+   
+   <script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+    
+    for (i = 0; i < coll.length; i++) {
+      coll[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var content = this.nextElementSibling;
+
+        if (content.style.maxHeight){
+          content.style.maxHeight = null;
+        } else {
+          content.style.maxHeight = content.scrollHeight + "px";
+        }
+
+            // if (content.style.display === "block") {
+            // content.style.display = "none";
+            // } else {
+            // content.style.display = "block";
+            // }
+
+      });
+    }
+    </script>
+        
+
+       
+          
+{% endblock javascript %}
+
+

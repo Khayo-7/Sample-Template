@@ -1,0 +1,18 @@
+{% load extras %}
+{% block content %}
+ 
+
+
+<h1 class="h3 mb-3 font-weight-normal"><u> Report</u></h1>
+
+<h2> <i><u> Created At</u>: {% now as today_now %}  {% with now=today_now.split.0 today=today_now.split.1 %} Time : {{now}} Date : {{today}} {% endwith %}</i>  </h2>
+
+{% if instances %}
+    <h1>Total {{count}}</h1>
+    
+    {% with desired_fields='id feedback created_at updated_at created_by_id updated_by_id' %}
+
+
+        
+
+

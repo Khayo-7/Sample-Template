@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+<form class="form-signin" method="post">{% csrf_token %}
+  {% extends 'base.html' %}
+  {% load static %}
+  {% load materializecss %}
+  {% block content %}
+  {{ form|materializecss }}
+  
+  
+  {% block css %}
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/css/materialize.min.css" integrity="sha256-qj3p6P1fJIV+Ndv7RW1ovZI2UhOuboj9GcODzcNFIN8=" crossorigin="anonymous" />
+  {% endblock css %}
+  
+  <!-- from django.conf.global_settings import DATETIME_INPUT_FORMATS
+  
+  # ISO 8601 datetime format to accept html5 datetime input values
+  DATETIME_INPUT_FORMATS += ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"] -->
+  
+  <form class="form-signin" method="post" action="register">
+    {% csrf_token %}
+  
+    <h1 class="h3 mb-3 font-weight-normal">Register an account</h1>
+  
+    <input type="text" name="first_name" id="first_name" class="form-control" placeholder="First Name" required><br/>
+  
+    <input type="text" name="middle_name" id="middle_name" class="form-control" placeholder="Middle Name" required><br/>
+  
+    <input type="text" name="last_name" id="last_name" class="form-control" placeholder="Last Name" required><br/>
+  
+    <input type="email" name="email" id="email" class="form-control" placeholder="Email address" required autofocus><br/>
+  
+    <input type="text" name="user_ID" id="user_ID" class="form-control" placeholder="User ID" required autofocus><br/>
+    
+    <input type="password" name="password1" id="password1" class="form-control" placeholder="Password" required><br/>
+  
+    <input type="password" name="password2" id="password2" class="form-control" placeholder="Confirm password" required><br/>
+  
+    {% for field in registration_form %}
+        <p>
+          {% for error in field.errors %}
+            <p style="color: red">{{ error }}</p>
+          {% endfor %}
+        </p>
+    {% endfor %}
+    {% if registration_form.non_field_errors %}
+      <div style="color: red">
+        <p>{{registration_form.non_field_errors}}</p>
+      </div>
+        
+    {% endif %}
+  
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+  
+  </form>
+  <div class="d-flex flex-column">
+    <a class="m-auto" href="{% url 'index' %}">Index</a>
+    <a class="m-auto" href="{% url 'login' %}">log in</a>
+  </div>
+  
+  {% endblock content %}
+  
+  
+  {% block javascript %}
+  <script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/js/materialize.min.js" integrity="sha256-SrBfGi+Zp2LhAvy9M1bWOCXztRU9Ztztxmu5BcYPcPE=" crossorigin="anonymous"></script>
+  
+  <script>
+  $(document).ready(function(){
+  
+    // Initialize materialize data picker
+    $('.datepicker').datepicker({'format': 'yyyy-mm-dd'});
+    $('select').formSelect();
+  
+  });
+  </script>
+  {% endblock javascript %}
+  
+  
+  <h1 class="h3 mb-3 font-weight-normal">Login</h1>
+
+  <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+  
+  <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
+
+  {% for field in login_form %}
+      <p>
+        {% for error in field.errors %}
+          <p style="color: red">{{ error }}</p>
+        {% endfor %}
+      </p>
+  {% endfor %}
+  {% if login_form.non_field_errors %}
+    <div style="color: red">
+      <p>{{login_form.non_field_errors}}</p>
+    </div>
+      
+  {% endif %}
+
+  <button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
+
+</form>
+
+<div class="d-flex flex-column">
+  <a class="m-auto" href="{% url 'register' %}">Register</a>
+  <a class="m-auto" href="{% url 'index' %}">Index</a>
+</div>
+
+
+{% endblock content %}
+
+

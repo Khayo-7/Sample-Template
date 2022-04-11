@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load extras %}
+
+{% block content %}
+{% csrf_token %}
+
+<h1 class="h3 mb-3 font-weight-normal">{{action}} {{page_type}} </h1>
+<h1 class="h3 mb-3 font-weight-normal">{{title}} (Count = {{count}}) </h1>
+                    
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        {% if 'info' in message.tags %}
+            <li{% if message.tags %} class="{{ message.tags }} card-panel green lighten-2"{% endif %}>
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    Important: 
+                {% endif %}
+                
+                {{ message }}
+            </li> 
+        {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}
+
+  
+{% if instances %}
+
+
+
+ <table>
+    <thead>
+        <tr><th>No</th>
+            {% with fields=instances|get_field_names_from_instances %}
+
+                        {% for field_name in fields %}
+                            {% if field_name != 'description' %}
+                               
+                                    <th> {{ field_name | field_name_to_phrase }}   </th>
+
+                            {% endif %} 
+            
+                
+                            {% endfor %} 
+                            {% endwith %} 
+        </tr>
+    </thead>
+
+    <tbody>
+
+                     
+            {% for instance in instances.values %}                 
+            <tr>
+                <td>{{ forloop.counter}}</td>
+                {% for field_name, header_value in instance.items %}
+                    {% if field_name != 'description' %}
+                        <td>{{ header_value}}</td>
+                    {% endif %} 
+                {% endfor%}              
+                    
+                {% with view_url=app|add:':view-'|add:url_suffix update_url=app|add:':update-'|add:url_suffix%}
+                {% with delete_url=app|add:':delete-'|add:url_suffix approve_url=app|add:':approve-'|add:url_suffix %}
+                   
+                    <td><a class="waves-effect waves light btn-large" href="{% url view_url instance.id %}">View</a></td> 
+                    <td><a class="waves-effect waves light btn-large" href="{% url update_url instance.id %}">Update</a></td>
+                    <td><a class="waves-effect waves light btn-large" href="{% url delete_url instance.id %}">Delete</a></td> 
+                
+                {% endwith %}
+                {% endwith %}  
+            </tr> 
+            {% empty %}
+                <h1>Sorry No {{instance_type}} is found</h1>
+            {% endfor %}
+           
+        
+    </tbody>
+  </table> 
+
+   
+ 
+    {% if instance_type == 'Incident' %}
+        <form action="" method="POST">    
+            {% csrf_token %}  
+            <div>
+                <button class="waves-effect waves light btn-large" type="submit" value="preview-partial" name="submit">Preview Partial Report</button> 
+                <button class="waves-effect waves light btn-large" type="submit" value="download-partial" name="submit">Download Partial Report</button>  
+            
+                <button class="waves-effect waves light btn-large" type="submit" value="preview-full" name="submit">Preview Full Report</button> 
+                <button class="waves-effect waves light btn-large" type="submit" value="download-full" name="submit">Download Full Report</button>  
+            </div>
+        </form>
+    {% endif %}   
+
+
+{% endif %}  
+
+{% if action != 'Search' %}
+
+    {% if instance_type != 'Initial Analysis' and instance_type != 'Asset' %}
+        <br>
+        <div>
+        {% with add_url=app|add:':add-'|add:url_suffix %}
+            <a class="waves-effect waves light btn-large" href="{% url add_url %}" class="waves-effect waves light btn-large">Add {{instance_type}}</a>  
+        {% endwith %}
+        </div>
+    {% endif %}  
+
+{% endif %}  
+
+<!-- <br>
+<br>
+<div class="row">
+    <div class="col"> -->
+        <!-- <div class="card card-body"> -->
+            
+            <form action="" method="get">
+                {{filter.form}}
+                <button class="btn btn-primary" type="submit">Filter</button>
+            </form>
+        
+        <!-- </div>
+        </div>
+        </div> -
+        <br>
+        <br> -->
+        
+{% endblock content %}

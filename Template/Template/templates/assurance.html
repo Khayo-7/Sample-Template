@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+ 
+    <h1 class="h3 mb-3 font-weight-normal">{{title}} {{action}} {{page_type}}</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'info' in message.tags %}
+                <div class="card-panel green lighten-2">{{message}}</div>
+            {% endif %}
+        {% endfor%}
+    {% endif %} 
+    
+    <p> <h3> Are you sure to {{action}} The {{instance_type}} {{instance}}</h3></p>
+    <form action="" enctype="multipart/form-data" method="POST"> 
+       
+        {% csrf_token %}
+        <br/>
+        {% if instance_type != 'Initial Analysis' %}
+            {% with view_all_url=app|add:':'|add:view_all_url %}
+                <a class="waves-effect waves light btn-large" href="{% url view_all_url %}" class="waves-effect waves light btn-large">Cancel</a>
+            {% endwith %}
+            <button class="waves-effect waves light btn-large" type="submit">{{action}} {{instance_type}}</button>
+       {% else %}
+            <a class="waves-effect waves light btn-large" href="{% url 'incidents:view-incident-initial-analysises' instance.incident.id %}" class="waves-effect waves light btn-large">Cancel</a>
+            <button class="waves-effect waves light btn-large" type="submit"  name ="submit" value="delete-initial">{{action}} {{instance_type}}</button>
+        {% endif %} 
+        <!-- <button class="btn btn-lg btn-primary btn-block" type="submit" value="Add User">Add User</button> -->
+
+
+        {% if instance_type != 'Initial Analysis' %}
+            {% with view_all_url=app|add:':'|add:view_all_url %}
+                <a class="waves-effect waves light btn-large" href="{% url view_all_url %}" >View All {{title}}</a>  
+            {% endwith %}
+        {% endif %} 
+
+    </form>
+    
+{% endblock content %}

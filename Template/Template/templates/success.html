@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{title}} {{page_type}}
+{% endblock title %}
+
+{% block content %}
+
+    <h1 class="h3 mb-3 font-weight-normal">{{title}} {{action}} {{page_type}}</h1>
+  
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'info' in message.tags %}
+                <div class="card-panel green lighten-2">{{message}}</div>
+            {% endif %}
+        {% endfor%}
+    {% endif %}
+    
+    {% csrf_token %}  
+
+    <div class="container">
+        <a class="waves-effect waves light btn-large" href="{{ request.META.HTTP_REFERER }}">Back</a>
+    </div>
+
+{% endblock content %}
+ <!-- <h1 class="h3 mb-3 font-weight-normal">{{ user.username|default:'Guest' }} has {{title}} successfully!</h1>
+    <h1 class="h3 mb-3 font-weight-normal">{{ success_message|default:'Guest' }} has {{title}} successfully!</h1>
+    <h1 class="h3 mb-3 font-weight-normal">{{ page_message|default:'Action Successful' }}!</h1>
+    -->
