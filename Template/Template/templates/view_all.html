@@ -78,15 +78,17 @@
 
    
  
-    {% if instance_type == 'Incident' %}
+    {% if instance_type == 'instance1' %}
         <form action="" method="POST">    
             {% csrf_token %}  
             <div>
                 <button class="waves-effect waves light btn-large" type="submit" value="preview-partial" name="submit">Preview Partial Report</button> 
-                <button class="waves-effect waves light btn-large" type="submit" value="download-partial" name="submit">Download Partial Report</button>  
+                <button class="waves-effect waves light btn-large" type="submit" value="download-partial-pdf" name="submit">Download Partial Report(PDF)</button>  
+                <button class="waves-effect waves light btn-large" type="submit" value="download-partial-doc" name="submit">Download Partial Report(DOC)</button>  
             
                 <button class="waves-effect waves light btn-large" type="submit" value="preview-full" name="submit">Preview Full Report</button> 
-                <button class="waves-effect waves light btn-large" type="submit" value="download-full" name="submit">Download Full Report</button>  
+                <button class="waves-effect waves light btn-large" type="submit" value="download-full-pdf" name="submit">Download Full Report(PDF)</button>  
+                <button class="waves-effect waves light btn-large" type="submit" value="download-full-doc" name="submit">Download Full Report(DOC)</button>  
             </div>
         </form>
     {% endif %}   
@@ -96,7 +98,7 @@
 
 {% if action != 'Search' %}
 
-    {% if instance_type != 'Initial Analysis' and instance_type != 'Asset' %}
+    {% if instance_type != ' Analysis' and instance_type != 'Asset' %}
         <br>
         <div>
         {% with add_url=app|add:':add-'|add:url_suffix %}
@@ -113,10 +115,7 @@
     <div class="col"> -->
         <!-- <div class="card card-body"> -->
             
-            <form action="" method="get">
-                {{filter.form}}
-                <button class="btn btn-primary" type="submit">Filter</button>
-            </form>
+            <!--  -->
         
         <!-- </div>
         </div>
@@ -124,4 +123,7 @@
         <br>
         <br> -->
         
-{% endblock content %}
+{% endblock content %}<form action="" method="get">
+                {{filter.form}}
+                <button class="btn btn-primary" type="submit">Filter</button>
+            </form>
