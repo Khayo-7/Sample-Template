@@ -14,7 +14,7 @@ urlpatterns = [
     # path("preview-pdf/<int:id>/<str:preference>/<str:state>/", myapp.preview_pdf, name="preview-pdf"), #mapping the homepage function
     # # path("preview-pdf/<int:id>/", myapp.LabelsView.as_view(), name="preview-pdf"), #mapping the homepage function
     # path("download-pdf/<int:id>/<str:preference>/<str:state>/", myapp.download_pdf, name="download-pdf"), #mapping the homepage function
-    path("generate-pdf/<int:id>/<str:preference>/<str:state>/", myapp.pdf_generator_2, name="generate-pdf"), #mapping the homepage function
+    path("generate-pdf/<int:id>/<str:preference>/<str:state>/", myapp.generator_2, name="generate-pdf"), #mapping the homepage function
     # path("generate-report/", myapp.generate_report, name="generate-report"), #mapping the homepage function
                    
     
