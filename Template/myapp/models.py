@@ -16,7 +16,48 @@ STATUS_CHOICES = [
     (APPROVED, _('Approved')),
     (REJECTED, _('Rejected')),
 ]
-     
+
+
+# class AutoCreatedField(models.DateTimeField):
+#     def __init__(self, *args, **kwargs):
+#         kwargs.setdefault('editable', False)
+#         kwargs.setdefault('default', now)
+#         super().__init__(*args, **kwargs)
+
+# class AutoLastModifiedField(AutoCreatedField):
+   
+#     def get_default(self):
+        
+#         if not hasattr(self, "_default"):
+#             self._default = self._get_default()
+#         return self._default
+
+#     def pre_save(self, instance, add):
+#         value = now()
+#         if add:
+#             current_value = getattr(instance, self.attname, self.get_default())
+#             if current_value != self.get_default():
+#                 value = getattr(instance, self.attname)
+#             else:
+#                 for field in instance._meta.get_fields():
+#                     if isinstance(field, AutoCreatedField):
+#                         value = getattr(instance, field.name)
+#                         break
+#         setattr(instance, self.attname, value)
+#         return value
+                
+
+
+# class TimeStampedModel(models.Model):
+
+#     created = AutoCreatedField(_('created'))
+#     modified = AutoLastModifiedField(_('modified'))
+
+#     class Meta:
+#         abstract = True
+
+# # class model2(TimeStampedModel):
+
     class Meta:
         ordering = ['code']
         unique_together = (("code", "message"),)
