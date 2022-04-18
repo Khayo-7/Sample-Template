@@ -25,7 +25,7 @@ from Template.faker import generate_random_data
 
 ## delete
 from users.models import User
-from myapp.models import *
+from myapps.models import *
 
 # General
 class General:  
@@ -177,7 +177,8 @@ class General:
                     with transaction.atomic():  
 
                         add_form = form.save(commit=False)
-                  
+
+    
                         try:
                             usr = User.objects.get(pk=1)
                             add_form.created_by = usr # form.created_by = request.User
@@ -188,6 +189,7 @@ class General:
                         add_form.updated_at = None
                         add_form.save()
 
+            
                         # messages.DEBUG INFO SUCCESS WARNING ERROR
                         messages.add_message(request, messages.INFO, self.instance_type + " is Created Successfully")
 
@@ -352,13 +354,14 @@ class General:
     def get_full_instance_information(self, instance, full_information):
 
         information = {}
-        text1 = 'Created At : '
-
 
         information['Code'] = str(instance.code)
-        
-        if instance.status:
-            information['Status'] = str(instance.status)
+        information['Start Time'] = str(instance.started_at)
+
+        if instance.ended_at:
+            information['End Time'] = str(instance.ended_at)
+
+        information['Status'] = str(instance.status)
         information['Created By'] = str(instance.created_by)
         information['Created At'] = str(instance.created_at)
 
@@ -370,15 +373,19 @@ class General:
 
             information['Instance'] = str(instance)
 
-            if instance.initialanalysis_set:                
+            if instance.analysis_set:                
     
                 extra_informations = []
 
-                for analysis in instance.nalysis_set.all(): 
-                    extra_information = {}                
+                for analysis in instance.analysis_set.all(): 
+                    extra_information = {}               
                     
-                    extra_information['Source'] = str(analysis.attachment_source)
+                    if analysis.attachment_source:
+                        extra_information['Source'] = str(analysis.attachment_source)                    
+                        
                     
+
+                        
                     if analysis.attachment:
                         extra_information['Attachment Data'] = analysis.attachment_data
                     
@@ -388,17 +395,15 @@ class General:
 
         return information
 
-    def generate_pdf(self, request, context, type): 
 
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.utils import ImageReader
+
+    def generate_pdf(self, request, context, type): 
         
         
         result = BytesIO()
         # # result = StringIO.StringIO()
         # now = str(datetime.datetime.utcnow().strftime('%H:%M:%S %d-%m-%Y')) 
-        # now = str(datetime.datetime.now())[:-7]
-        # now = ('_').join(now.split())
+        # now = ('_').join((str(datetime.datetime.now())[:-7]).split())
 
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
 
@@ -417,17 +422,6 @@ class General:
         pisa_pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)        
         if pisa_pdf.err:
             return HttpResponse('Error <pre>' + html + '</pre>' % escape(html))
-
-        # cnvs = canvas.Canvas(result)
-
-        # header_image = ImageReader('/static/img/header.png')
-        # footer_image = ImageReader('/static/img/footer.png')
-        # cnvs.drawImage(header_image, -100, 700, mask='auto')
-        # cnvs.drawImage(footer_image, -100, 100, mask='auto')
-        # cnvs.drawString(300, 830, "Report Created At " + now )
-        # cnvs.showPage() 
-        # cnvs.save() 
-            
         
         response.write(result.getvalue())
         result.close()
@@ -436,15 +430,17 @@ class General:
 
     def generate_report_doc(self, request, context, type):
         
-        headers = [
-                'Code', 'Response Status',
+       headers = [
+                    'No', 'ID', 'Code', 'Response Status', 'Status', 'Created At', 'Updated At','Feedback',
+        ] 
+        extra_headers = [
+                'Attachment', 'Attachment Data',
         ]
-
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
 
         response = HttpResponse(content_type='application/pdf')
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-        response['Content-Disposition'] = type + '; filename=reports_%s.docx' % now
+        response['Content-Disposition'] = type + '; filename=report_%s.docx' % now
         response['Content-Encoding'] = 'UTF-8'
 
         title = context['title']
@@ -452,13 +448,12 @@ class General:
         pagesize = context['pagesize']
         full_information = context['full_information']
 
-        # instance = context['instance']
         instances = context['instances']
 
         document = Document()
         # document.add_page_break()
         document.add_heading(title, 0)
-        document.add_paragraph('Full Report', style='ListBullet') 
+        document.add_paragraph('Full Reports', style='ListBullet') 
 
         if instances:  
 
@@ -498,9 +493,12 @@ class General:
                 for i in range(rows):
                     document.add_paragraph()
                     information = informations[i]
-                    # document.add_paragraph('Instance-' + str(i+1), style='ListNumber')
-                    document.add_paragraph('Instance-' + str(i+1), style='IntenseQuote')
+                    # document.add_paragraph('myapp-' + str(i+1), style='ListNumber')
+                    document.add_paragraph('myapp-' + str(i+1), style='IntenseQuote')
                     document = self.write_to_doc(document, information, headers, full_information)
+                    
+                    if i < rows-1:
+                        document.add_page_break()
 
                     
 
@@ -509,7 +507,7 @@ class General:
         return response
         
     def generate_report_doc(self, request, context, type):
-
+        
         headers = [
                     'No', 'ID', 'Code', 'Response Status', 'Status', 'Created At', 'Updated At','Feedback',
         ] 
@@ -517,7 +515,7 @@ class General:
                 'Attachment', 'Attachment Data',
         ]
 
-        
+
        
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
 
@@ -532,7 +530,6 @@ class General:
         full_information = context['full_information']
 
         document = Document()
-        # document.add_page_break()
         document.add_heading(title + ' Report', 0)
 
         instance = context['instance']
@@ -576,7 +573,7 @@ class General:
 
 
             document.add_paragraph() 
-            document.add_paragraph('Detail of -' + information['Code'], style='IntenseQuote')    
+            document.add_paragraph('Detail -' + information['Code'], style='IntenseQuote')    
 
             for j in range(len(headers)):
                 document.add_paragraph(headers[j] + ' : ' + information[headers[j]] , style='ListBullet') 
@@ -587,22 +584,86 @@ class General:
 
                     extra_informations = information['Extra Informations']
                     document.add_paragraph() 
-
+            
                     if extra_informations:
                         
-                        document.add_paragraph('Initial -' + information['Code'], style='IntenseQuote')    
+                        document.add_paragraph('Analysis of myapp-' + information['Code'], style='IntenseQuote')    
 
+                        if 'Alert Message' in information:
+                            document.add_paragraph('Alert Message(Signature) :- ' + information['Alert Message'] , style='ListBullet') 
+                       
+                        i = 0
                         for extra_information in extra_informations:
+                            i += 1 
+                            # print("extra", extra_information)
                             if 'Source' in extra_information:
-                                document.add_paragraph('Source' + ' : ' + extra_information['Source'] , style='ListBullet') 
-                            
+                                document.add_paragraph(str(i) + '. Source ' + extra_information['Source'], style='ListBullet')   
+
+                          
                             if 'Attachment Data' in extra_information:      
                                 try:
-                                    document.add_picture((BytesIO(base64.decodebytes(base64.b64encode(extra_information['Attachment Data'])))), width=Inches(5))
+                                    document.add_picture((BytesIO(base64.decodebytes(base64.b64encode(extra_information['Attachment Data'])))), width=Inches(7))
                                     # document.add_picture((BytesIO(base64.decodebytes(bytes(information['Attachment Data'], "utf-8")))))
                                 except:
                                     document.add_paragraph('No attachment found for this source' , style='ListBullet') 
                                     document.add_paragraph() 
                     else:
-                        document.add_paragraph('No  found for -' + information['Code'], style='IntenseQuote')  
+                        document.add_paragraph('No Analysis found-' + information['Code'], style='IntenseQuote')  
+        
+        # document.add_page_break()
         return document                
+
+
+
+        # from reportlab.lib.units import mm
+        # from reportlab.pdfgen.canvas import Canvas
+
+
+        # class NumberedPageCanvas(Canvas):
+        
+        #     def __init__(self, *args, **kwargs):
+        #         """Constructor"""
+        #         super().__init__(*args, **kwargs)
+        #         self.pages = []
+
+        #     def showPage(self):
+        #         """
+        #         On a page break, add information to the list
+        #         """
+        #         self.pages.append(dict(self.__dict__))
+        #         self._startPage()
+
+        #     def save(self):
+        #         """
+        #         Add the page number to each page (page x of y)
+        #         """
+        #         page_count = len(self.pages)
+
+        #         for page in self.pages:
+        #             self.__dict__.update(page)
+        #             self.draw_page_number(page_count)
+        #             super().showPage()
+
+        #         super().save()
+
+        #     def draw_page_number(self, page_count):
+        #         """
+        #         Add the page number
+        #         """
+        #         page = "Page %s of %s" % (self._pageNumber, page_count)
+        #         self.setFont("Helvetica", 9)
+        #         self.drawRightString(179 * mm, -280 * mm, page)
+
+
+        # from reportlab.pdfgen import canvas
+        # from reportlab.lib.utils import ImageReader
+        # cnvs = canvas.Canvas(result)
+
+        # header_image = ImageReader('/home/khalid/myapp/Template/static/img/header.png')
+        # footer_image = ImageReader('/home/khalid/myapp/Template/static/img/footer.png')
+        # cnvs.drawImage(header_image, -100, 700, mask='auto')
+        # cnvs.drawImage(footer_image, -100, 100, mask='auto')
+        # cnvs.drawString(300, 830, "Report Created At " + now )
+        # cnvs.showPage() 
+        # cnvs.save() 
+            # doc.build(Story, canvasmaker=PageNumCanvas)
