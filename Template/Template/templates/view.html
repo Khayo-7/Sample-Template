@@ -52,39 +52,33 @@
     <div>
         {% with add_url=app|add:':add-'|add:url_suffix  update_url=app|add:':update-'|add:url_suffix delete_url=app|add:':delete-'|add:url_suffix %}
 
-            {% if instance_type == 'Incident' %}    
+            {% if instance_type == 'myapp' %}    
             
-                {% if instance.initialanalysis_set %}
+                {% if instance.analysis_set %}
 
-                    <button type="button" class="collapsible">Show Initial Analysis</button>
+                    <button type="button" class="collapsible">Show  Analysis</button>
                     <div class="content">
                     
                         <h1><b>{{instance.code}}</b></h1>
                         <h2><b>Alert Name:</b> {{instance.alert.name}}</h2>
 
-                        {% for initial_analysis in instance.initialanalysis_set.all %}
+                        {% for analysis in instance.analysis_set.all %}
                         
-                            <h3><b>Source:</b> {{initial_analysis.attachment_source.name}}</h3>
-                            
-                            {% if initial_analysis.count %}
-                                <h4>Engine Count : {{initial_analysis.count}}</h4>
-                            {% endif %}
-                            {% if initial_analysis.percentage %}
-                                <h4>Percentage : {{initial_analysis.percentage}}</h4>
-                            {% endif %}
+                            <h3><b>Source:</b> {{analysis.attachment_source.name}}</h3>
+                           
                     
-                            <img src="{{initial_analysis.attachment_data|bin_2_img}}" alt="Attachment here">
-                            <!-- <img src="{{initial_analysis.attachment.url}}" alt="Attachment here"> -->  
+                            <img src="{{analysis.attachment_data|bin_2_img}}" alt="Attachment here">
+                            <!-- <img src="{{analysis.attachment.url}}" alt="Attachment here"> -->  
                             <br />  <br />          
                             <div>           
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:view-initial-analysis' initial_analysis.id %}">View Initial Analysis</a>
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:update-initial-analysis' initial_analysis.id %}">Update Initial Analysis</a>
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:delete-initial-analysis' initial_analysis.id %}">Delete Initial Analysis</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:view--analysis' analysis.id %}">View  Analysis</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:update--analysis' analysis.id %}">Update  Analysis</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:delete--analysis' analysis.id %}">Delete  Analysis</a>
                                 
-                                {% if initial_analysis.status == 'pending' %}
+                                {% if analysis.status == 'pending' %}
                                     {% with approve_url=app|add:':approve-'|add:url_suffix reject_url=app|add:':reject-'|add:url_suffix %}
-                                        <a class="waves-effect waves light btn-large" href="{% url approve_url initial_analysis.id %}">Approve {{instance_type}}</a>
-                                        <a class="waves-effect waves light btn-large" href="{% url reject_url initial_analysis.id %}">Reject {{instance_type}}</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url approve_url analysis.id %}">Approve {{instance_type}}</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url reject_url analysis.id %}">Reject {{instance_type}}</a>
                                     {% endwith %}
                                 {% endif %}  
                             
@@ -95,15 +89,17 @@
                     
     
                         <div>
-                            <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
-                            <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'full' %}">Download Full Report</a>  
+                            <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
+                            <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-pdf' 'full' %}">Download Full Report(PDF)</a>  
+                            <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-doc' 'full' %}">Download Full Report(DOC)</a>  
                         </div>
                     <br>
                     </div>
                     <br>
                     <div>
-                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
-                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'partial' %}">Download Partial Report </a>   
+                        <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
+                        <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-pdf' 'partial' %}">Download Partial Report(PDF)</a>   
+                        <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-doc' 'partial' %}">Download Partial Report(DOC)</a>   
                     </div>
                     <br>
                 {% endif %}
@@ -120,48 +116,50 @@
                 </form> -->
                 <br>
                 <div>
-                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
-                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'partial' %}">Download Partial Report </a>   
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'preview' 'partial' %}">Preview Partial Report</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-pdf' 'partial' %}">Download Partial Report(PDF)</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-doc' 'partial' %}">Download Partial Report(DOC)</a>   
                 
-                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
-                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:generate-pdf' instance.id 'download' 'full' %}">Download Full Report</a>  
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'preview' 'full' %}">Preview Full Report</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-pdf' 'full' %}">Download Full Report(PDF)</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:generate-pdf' instance.id 'download-doc' 'full' %}">Download Full Report(DOC)</a>  
                 </div>
                 <br>
 
                 
-                    <a class="waves-effect waves light btn-large" href="{% url 'incidents:add-initial-analysis' instance.id %}">Add Initial Analysis</a> 
+                    <a class="waves-effect waves light btn-large" href="{% url 'myapps:add--analysis' instance.id %}">Add  Analysis</a> 
                 
-            {% elif instance_type == 'Organization' %}  
+            {% elif instance_type == 'model2' %}  
             
 
-                {% if instance.asset_set %}
+                {% if instance.model1_set %}
 
-                    <button type="button" class="collapsible">Show Assets</button>
+                    <button type="button" class="collapsible">Show model1s</button>
                     <div class="content">
                     
                         <h1><b>{{instance}}</b></h1>
 
-                        {% for asset in instance.asset_set.all %}
+                        {% for model1 in instance.model1_set.all %}
                         
-                            <h3><b>Name:</b> {{asset.name}}</h3>
-                            <h4><b>Serial Number:</b> {{asset.serial_no}}</h4>
-                            <h4><b>Manufacturer:</b> {{asset.name}}</h4>
-                            <h4><b>Description:</b> {{asset.description}}</h4>
+                            <h3><b>Name:</b> {{model1.name}}</h3>
+                            <h4><b>Serial Number:</b> {{model1.serial_no}}</h4>
+                            <h4><b>Manufacturer:</b> {{model1.name}}</h4>
+                            <h4><b>Description:</b> {{model1.description}}</h4>
                             
-                            {% if asset.type %}
-                                <h4><b>Asset Type: </b>{{asset.type}}</h4>
+                            {% if model1.type %}
+                                <h4><b>model1 Type: </b>{{model1.type}}</h4>
                             {% endif %}
                     
                             <br />  <br />          
                             <div>           
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:view-asset' asset.id %}">View Asset</a>
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:update-asset' asset.id %}">Update Asset</a>
-                                <a class="waves-effect waves light btn-large" href="{% url 'incidents:delete-asset' asset.id %}">Delete Asset</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:view-model1' model1.id %}">View model1</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:update-model1' model1.id %}">Update model1</a>
+                                <a class="waves-effect waves light btn-large" href="{% url 'myapps:delete-model1' model1.id %}">Delete model1</a>
                                 
-                                {% if asset.status == 'pending' %}
+                                {% if model1.status == 'pending' %}
                                     {% with approve_url=app|add:':approve-'|add:url_suffix reject_url=app|add:':reject-'|add:url_suffix %}
-                                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:approve-asset' asset.id %}">Approve Asset</a>
-                                        <a class="waves-effect waves light btn-large" href="{% url 'incidents:reject-asset' asset.id %}">Reject Asset</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url 'myapps:approve-model1' model1.id %}">Approve model1</a>
+                                        <a class="waves-effect waves light btn-large" href="{% url 'myapps:reject-model1' model1.id %}">Reject model1</a>
                                     {% endwith %}
                                 {% endif %}  
                             
@@ -174,7 +172,7 @@
                     <br>
                 {% endif %}
 
-                <a class="waves-effect waves light btn-large" href="{% url 'incidents:add-asset' instance.id %}">Add Asset</a>   
+                <a class="waves-effect waves light btn-large" href="{% url 'myapps:add-model1' instance.id %}">Add model1</a>   
                 
             {% endif %}
 
@@ -187,7 +185,7 @@
             {% endif %}  
             
 
-            {% if instance_type == 'Initial Analysis' or instance_type == 'Asset' %}
+            {% if instance_type == ' Analysis' or instance_type == 'model1' %}
                 <a class="waves-effect waves light btn-large" href="{% url add_url instance.id %}">Add {{instance_type}}</a>         
             {% else %}
                 <a class="waves-effect waves light btn-large" href="{% url add_url %}">Add {{instance_type}}</a>
@@ -204,7 +202,7 @@
     </div>
     <br>
     <div>
-    {% if instance_type != 'Initial Analysis' %}
+    {% if instance_type != ' Analysis' %}
         {% with view_all_url=app|add:':'|add:view_all_url %}
             <a class="waves-effect waves light btn-large" href="{% url view_all_url %}" >View All {{title}}</a>  
         {% endwith %}
