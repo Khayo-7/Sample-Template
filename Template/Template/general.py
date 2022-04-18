@@ -428,7 +428,7 @@ class General:
 
         return response
 
-    def generate_report_doc(self, request, context, type):
+    def generate_reports_doc(self, request, context, type):
         
        headers = [
                     'No', 'ID', 'Code', 'Response Status', 'Status', 'Created At', 'Updated At','Feedback',
@@ -437,6 +437,7 @@ class General:
                 'Attachment', 'Attachment Data',
         ]
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
+        today = str(datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'))
 
         response = HttpResponse(content_type='application/pdf')
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -453,6 +454,8 @@ class General:
         document = Document()
         # document.add_page_break()
         document.add_heading(title, 0)
+        document.add_paragraph('Created At: ' + today, style='ListBullet') 
+        document.add_paragraph('Created By : ' + 'Khalid', style='ListBullet') 
         document.add_paragraph('Full Reports', style='ListBullet') 
 
         if instances:  
@@ -518,6 +521,7 @@ class General:
 
        
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
+        today = str(datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'))
 
         response = HttpResponse(content_type='application/pdf')
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -531,6 +535,8 @@ class General:
 
         document = Document()
         document.add_heading(title + ' Report', 0)
+        document.add_paragraph('Created At: ' + today, style='ListBullet') 
+        document.add_paragraph('Created By : ' + 'Khalid', style='ListBullet') 
 
         instance = context['instance']
 
