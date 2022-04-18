@@ -119,15 +119,12 @@
 </table>
 
     {% for instance in instances %} 
-        <h1>Incident: {{ forloop.counter}}</h1>
+        <h1>{{ forloop.counter}}</h1>
         {% if instance.detail_info_set %}
             <h2><b>{{instance.code}}</b></h2>
-            <h3><b>Alert Name:</b> {{instance.alert.name}}</h3>
             
             {% for detail in instance.detail_info_set.all %}
-                <h3><b>Source:</b> {{detail.attachment_source.name}}</h3>
-                <h4>Engine Count: {{detail.count}}</h4>
-                <h4>Percentage: {{detail.percentage}}</h4>
+                <h3><b>Source:</b> {{detail.attachment_source.name}}</h3>   
                 
                 <img src="{{detail.attachment_data|get_binary}}" alt="Attachment here">
                 <!-- <img src="{{detail.attachment.path}}" alt="Attachment here"> -->
