@@ -2,9 +2,13 @@ import base64
 import imgkit
 import datetime
 from io import BytesIO 
+from docx import Document
 from xhtml2pdf import pisa
+from docx.shared import Inches
+from docxtpl import DocxTemplate
 from django.template import Context 
 from django.contrib import messages 
+from django.http import FileResponse
 from django.views.generic import FormView
 from django.http import HttpResponse, Http404
 from django.db import IntegrityError, transaction
@@ -14,17 +18,14 @@ from django.template.loader import render_to_string, get_template
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 
 
-# from cgi import escape
-# import cStringIO as StringIO
-
-
 # Create your views here.
 from Template.trans import phrases
 from Template.forms import SearchForm
+from Template.faker import generate_random_data
 
 ## delete
 from users.models import User
-from myapp.models import Model1, Model2
+from myapp.models import *
 
 # General
 class General:  
@@ -138,8 +139,9 @@ class General:
 
         self.action = "View All" 
         # instance = self.instance
-        print(self.instance)
         try:
+
+            # generate_random_data(self.instance, 1)
             filter = self.filter(request.GET, queryset=self.instance.objects.all())
             instances = filter.qs
             count = instances.count()  
@@ -148,10 +150,10 @@ class General:
             type = 'attachment'
             print(count)
             if request.method == 'POST':                 
-                return self.pdf_generator(request, context, type)
+                return self.generator(request, context, type)
                     
             return render(request, self.view_all_template, context)
-        except instance.DoesNotExist:
+        except self.instance.DoesNotExist:
             messages.add_message(request, messages.INFO, self.title + " are not found")
             # return redirect(self.success_url)   
             return redirect(request.META.get('HTTP_REFERER')) 
@@ -175,7 +177,7 @@ class General:
                     with transaction.atomic():  
 
                         add_form = form.save(commit=False)
-
+                  
                         try:
                             usr = User.objects.get(pk=1)
                             add_form.created_by = usr # form.created_by = request.User
@@ -186,7 +188,6 @@ class General:
                         add_form.updated_at = None
                         add_form.save()
 
-                            
                         # messages.DEBUG INFO SUCCESS WARNING ERROR
                         messages.add_message(request, messages.INFO, self.instance_type + " is Created Successfully")
 
@@ -302,7 +303,7 @@ class General:
         
         return render(request, self.assurance_template, context)
          
-    def pdf_generator(self, request, context, type):
+    def generator(self, request, context, type):
 
         if request.POST['submit'] == 'preview-partial':
             type = 'inline'
@@ -311,12 +312,22 @@ class General:
         elif request.POST['submit'] == 'preview-full':
             type = 'inline'
             
-        elif request.POST['submit'] == 'download-partial':
+        elif request.POST['submit'] == 'download-partial-pdf':
             context['full_information'] = False
+
+        elif request.POST['submit'] == 'download-partial-doc':
+            context['full_information'] = False
+            return self.generate_report_doc(request, context, type)
+
+        elif request.POST['submit'] == 'download-full-doc':
+            
+            return self.generate_report_doc(request, context, type)
+
+        # elif request.POST['submit'] == 'download-full-pdf':
 
         return self.generate_pdf(request, context, type)
 
-    def pdf_generator_2(self, request, id, preference, state):
+    def generator_2(self, request, id, preference, state):
         
         instance = self.instance 
         context = self.get_context()
@@ -325,17 +336,60 @@ class General:
         context.update({'pagesize':'A4', 'full_information': False, 'instance': instance})
         type='attachment'
 
-        if preference == 'preview':
-            type = 'inline'
         if state == 'full':
             context['full_information'] = True
 
+        if preference == 'preview':
+            type = 'inline'
+
+        elif preference == 'download-doc':
+
+            return self.generate_report_doc(request, context, type)
+
+
         return self.generate_pdf(request, context, type)
  
-    def generate_pdf(self, request, context, type):   
+    def get_full_instance_information(self, instance, full_information):
+
+        information = {}
+        text1 = 'Created At : '
 
 
-        # from cgi import escape
+        information['Code'] = str(instance.code)
+        
+        if instance.status:
+            information['Status'] = str(instance.status)
+        information['Created By'] = str(instance.created_by)
+        information['Created At'] = str(instance.created_at)
+
+        if instance.updated_by: 
+            information['Updated By'] = str(instance.updated_by) 
+            information['Updated At'] = str(instance.updated_at) 
+
+        if full_information:  
+
+            information['Instance'] = str(instance)
+
+            if instance.initialanalysis_set:                
+    
+                extra_informations = []
+
+                for analysis in instance.nalysis_set.all(): 
+                    extra_information = {}                
+                    
+                    extra_information['Source'] = str(analysis.attachment_source)
+                    
+                    if analysis.attachment:
+                        extra_information['Attachment Data'] = analysis.attachment_data
+                    
+                    extra_informations.append(extra_information)
+
+                information['Extra Informations'] = extra_informations
+
+        return information
+
+    def generate_pdf(self, request, context, type): 
+
         from reportlab.pdfgen import canvas
         from reportlab.lib.utils import ImageReader
         
@@ -351,9 +405,14 @@ class General:
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = type + '; filename=report_%s.pdf' % now
         response['Content-Encoding'] = 'UTF-8'
-        template = get_template(self.pdf_template)
-        # context = Context(context)
-        html  = template.render(context)
+
+        html = render_to_string(self.pdf_template, context)
+
+        # import weasyprint           
+        # html = weasyprint.HTML(string=html.encode("ISO-8859-1")).write_pdf(response)
+        # # import os      
+        # # from django.conf import settings
+        # # html = weasyprint.HTML(string=html).write_pdf(response, stylesheets=[weasyprint.CSS(os.path.join(settings.STATICFILES_DIRS[0], 'css/pdf.css'))])
         
         pisa_pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)        
         if pisa_pdf.err:
@@ -361,8 +420,8 @@ class General:
 
         # cnvs = canvas.Canvas(result)
 
-        # header_image = ImageReader('/home/khalid/Template/Template/static/img/header.png')
-        # footer_image = ImageReader('/home/khalid/Template/Template/static/img/footer.png')
+        # header_image = ImageReader('/static/img/header.png')
+        # footer_image = ImageReader('/static/img/footer.png')
         # cnvs.drawImage(header_image, -100, 700, mask='auto')
         # cnvs.drawImage(footer_image, -100, 100, mask='auto')
         # cnvs.drawString(300, 830, "Report Created At " + now )
@@ -372,24 +431,94 @@ class General:
         
         response.write(result.getvalue())
         result.close()
+
         return response
 
+    def generate_report_doc(self, request, context, type):
+        
+        headers = [
+                'Code', 'Response Status',
+        ]
 
+        now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
 
-     
+        response = HttpResponse(content_type='application/pdf')
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        response['Content-Disposition'] = type + '; filename=reports_%s.docx' % now
+        response['Content-Encoding'] = 'UTF-8'
 
-    # def download_docx(self, request, pdf_template, context, type='attachment'):
+        title = context['title']
+        instance_type = context['instance_type']
+        pagesize = context['pagesize']
+        full_information = context['full_information']
 
+        # instance = context['instance']
+        instances = context['instances']
 
-        from django.http import FileResponse
-        from docxtpl import DocxTemplate
+        document = Document()
+        # document.add_page_break()
+        document.add_heading(title, 0)
+        document.add_paragraph('Full Report', style='ListBullet') 
 
-        from docx import Document
-        # from django.http import HttpResponse
+        if instances:  
 
-        result = BytesIO()
-        # # result = StringIO.StringIO()
+            informations = []
+             
+            for instance in instances:    
 
+                if instance:   
+                    information = self.get_full_instance_information(instance, full_information)                    
+                    informations.append(information)
+
+            # header = table.rows[0].cells
+            if informations:
+                
+                cols = len(headers) 
+                rows = len(instances)
+                rows = instances.count()
+
+                table = document.add_table(rows=rows+1, cols=cols)
+                cell = table.rows[0].cells
+
+                for j in range(cols):
+                    cell[j].text = headers[j]
+                
+                # for j in range(rows-1):
+                #     print(j+1)
+                #     cell = table.rows[j+1].cells
+                for i in range(rows):
+                    cell = table.rows[i+1].cells
+                    # cell[0].text = str(i+1)
+                    information = informations[i]
+                    for j in range(cols):
+                        cell[j].text = information[headers[j]]
+                        # print(str(headers[j+1]))
+                        # print(str(information), headers)
+
+                for i in range(rows):
+                    document.add_paragraph()
+                    information = informations[i]
+                    # document.add_paragraph('Instance-' + str(i+1), style='ListNumber')
+                    document.add_paragraph('Instance-' + str(i+1), style='IntenseQuote')
+                    document = self.write_to_doc(document, information, headers, full_information)
+
+                    
+
+        document.save(response)
+
+        return response
+        
+    def generate_report_doc(self, request, context, type):
+
+        headers = [
+                    'No', 'ID', 'Code', 'Response Status', 'Status', 'Created At', 'Updated At','Feedback',
+        ] 
+        extra_headers = [
+                'Attachment', 'Attachment Data',
+        ]
+
+        
+       
         now = str(datetime.datetime.now().strftime('%d-%m-%Y_%Hhr:%Mmin:%Ssec'))
 
         response = HttpResponse(content_type='application/pdf')
@@ -397,158 +526,83 @@ class General:
         response['Content-Disposition'] = type + '; filename=report_%s.docx' % now
         response['Content-Encoding'] = 'UTF-8'
 
-        template = get_template(self.pdf_template)
-        # context = Context(context)
-        html  = template.render(context)
-        html = render_to_string(self.pdf_template, context)
+        title = context['instance_type']
+        instance_type = context['instance_type']
+        pagesize = context['pagesize']
+        full_information = context['full_information']
 
-        # result = BytesIO(html.encode("ISO-8859-1"))
-        
         document = Document()
-        # document.add_heading('Document Title', 0)
-        # document.add_paragraph('Intense quote', style='IntenseQuote') 
-        # document.add_paragraph(
-        #             'first item in unordered list', style='ListBullet'
-        #             )
-        # document.add_paragraph(
-        #             'first item in ordered list', style='ListNumber'
-        #             )
-
-        # #document.add_picture('monty-truth.png', width=Inches(1.25))
-
-        # table = document.add_table(rows=1, cols=3)
-        # hdr_cells = table.rows[0].cells
-        # hdr_cells[0].text = 'Qty'
-        # hdr_cells[1].text = 'Id'
-        # hdr_cells[2].text = 'Desc'
-
         # document.add_page_break()
-        # Report = ReportWord(Gcas, FI, FF, grafica)
-        # Report.save(result)  # save to memory stream
-        # result.seek(0)  # rewind the stream
-        
-        # context = {'first_name' : 'xxx', 'sur_name': 'yyy'}
-        # tpl = DocxTemplate(html)
-        # tpl = DocxTemplate(os.path.join(BASE_PATH, 'template.docx'))
-        # tpl.render(context)
-        # tpl.save(result)
-        # return FileResponse(result, as_attachment=True, filename='report_%s.docx' % ('_').join(str(datetime.datetime.now()).split()))
+        document.add_heading(title + ' Report', 0)
 
-       
-        # pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-        result.seek(0)
-        response.write(result.getvalue())
-        result.close()
+        instance = context['instance']
+
+        if instance:
+        
+            information = self.get_full_instance_information(instance, full_information)  
+                    
+            document.add_paragraph('Full Report of '  + information['Code'], style='ListBullet') 
+
+            document.add_paragraph('Overview -' + information['Code'], style='IntenseQuote')      
+                    
+            cols = 3
+            rows = len(headers)
+
+            table = document.add_table(rows=rows+1, cols=cols)
+            
+            cell = table.rows[0].cells
+            
+            cell[0].text = "No"
+            cell[1].text = "Key"
+            cell[2].text = "Value"
+            
+            for i in range(rows):
+                cell = table.rows[i+1].cells
+                cell[0].text = str(i+1)
+                cell[1].text = headers[i]
+                cell[2].text = information[headers[i]]
+
+            document = self.write_to_doc(document, information, headers, full_information)
+        else:
+            document.add_paragraph('Sorry, the instance is not found', style='ListBullet') 
+
         document.save(response)
 
-        return response      
-
-
-# weasyprint.HTML(string=html).write_pdf(response,
-#     stylesheets=[weasyprint.CSS(
-#         settings.STATIC_ROOT + 'css/pdf.css')])
-
-
-     
-
-
-    def html_to_image(self, request, pdf_template, context):
-
-        template = get_template(pdf_template)
-        # context = Context(context)
-        html  = template.render(context)
-
-        response = imgkit.from_file(html, 'report_%s.jpg' % ('_').join(str(datetime.datetime.now()).split()))    
         return response
-        # from html2image import Html2Image
-        # hti = Html2Image()
-        # hti.screenshot(url='https://www.python.org', save_as='python_org.png')
-        # orwith open('./test.html') as f:
-        #     hti.screenshot(f.read(), save_as='out.png')
-        # # pip install htmlwebshot
-
-        # from htmlwebshot import WebShot
-        # shot = WebShot()
-        # shot.quality = 100
-
-        # image = shot.create_pic(html="file.html")
-
-
-
-
-
-
-
-
-        # from reportlab.pdfgen import canvas
-        # from reportlab.lib.utils import ImageReader
-        
-        # response = HttpResponse(html, content_type='application/pdf') 
-
-        # response['Content-Disposition'] = type + '; filename=report_%s.pdf' % ('_').join(str(datetime.datetime.now()).split())
-          
-        # # get_param = request.GET.get('name', 'World')
-
-        # now = datetime.datetime.utcnow().strftime(' %H:%M:%S %d-%m-%Y') #.%f
-
-        # result = BytesIO()
-        # p = canvas.Canvas(result)
-
-        # # my_image = ImageReader('https://www.google.com/images/srpr/logo11w.png')
-
-        # # p.drawImage(my_image, 10, 10, mask='auto')
-
-        # p.drawString(10, 830, "Report Created At " + now ) 
-
-        # p.showPage() 
-        # p.save() 
-
-        # pdf = result.getvalue()
-        # result.close()
-        # response.write(pdf)
-
-        # return response
-
-        # doc = SimpleDocTemplate("/tmp/somefilename.pdf")
-        # styles = getSampleStyleSheet()
-        # Story = [Spacer(1,2*inch)]
-        # style = styles["Normal"]
-        # for i in range(100):
-        #    bogustext = ("This is Paragraph number %s.  " % i) * 20
-        #    p = Paragraph(bogustext, style)
-        #    Story.append(p)
-        #    Story.append(Spacer(1,0.2*inch))
-        # doc.build(Story)
-
-        # fs = FileSystemStorage("/tmp")
-        # with fs.open("somefilename.pdf") as pdf:
-        #     response = HttpResponse(pdf, content_type='application/pdf')
-        #     response['Content-Disposition'] = 'attachment; filename="somefilename.pdf"'
-        #     return response
-
-        # return response
-
-        # from django.core.files.storage import FileSystemStorage
-        # from django.http import HttpResponse
-        # from django.template.loader import render_to_string
-
-        # from weasyprint import HTML
-
     
-        # html_string = render_to_string(template_path, context)
+    def write_to_doc(self, document, information, headers, full_information):
 
-        # html = HTML(string=html_string)
-        
-        # with fs.open('mypdf.pdf') as pdf:
-        #     response = HttpResponse(html.write_pdf(), content_type='application/pdf')
-        #     response['Content-Disposition'] = 'inline; filename=report_%s.pdf' % ('_').join(str(datetime.datetime.now()).split())
-        #     return response
+        if information:              
 
-        # return response
 
-        # html.write_pdf(target='/tmp/mypdf.pdf')
-        # fs = FileSystemStorage('/tmp')
-        # with fs.open('mypdf.pdf') as pdf:
-        #     response = HttpResponse(pdf, content_type='application/pdf')
-        #     response['Content-Disposition'] = 'inline; filename=report_%s.pdf' % ('_').join(str(datetime.datetime.now()).split())
-        #     return response
+            document.add_paragraph() 
+            document.add_paragraph('Detail of -' + information['Code'], style='IntenseQuote')    
+
+            for j in range(len(headers)):
+                document.add_paragraph(headers[j] + ' : ' + information[headers[j]] , style='ListBullet') 
+
+            if full_information:   
+
+                if 'Extra Informations' in information:  
+
+                    extra_informations = information['Extra Informations']
+                    document.add_paragraph() 
+
+                    if extra_informations:
+                        
+                        document.add_paragraph('Initial -' + information['Code'], style='IntenseQuote')    
+
+                        for extra_information in extra_informations:
+                            if 'Source' in extra_information:
+                                document.add_paragraph('Source' + ' : ' + extra_information['Source'] , style='ListBullet') 
+                            
+                            if 'Attachment Data' in extra_information:      
+                                try:
+                                    document.add_picture((BytesIO(base64.decodebytes(base64.b64encode(extra_information['Attachment Data'])))), width=Inches(5))
+                                    # document.add_picture((BytesIO(base64.decodebytes(bytes(information['Attachment Data'], "utf-8")))))
+                                except:
+                                    document.add_paragraph('No attachment found for this source' , style='ListBullet') 
+                                    document.add_paragraph() 
+                    else:
+                        document.add_paragraph('No  found for -' + information['Code'], style='IntenseQuote')  
+        return document                
